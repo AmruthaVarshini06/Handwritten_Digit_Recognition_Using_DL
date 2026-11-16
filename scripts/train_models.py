@@ -37,7 +37,7 @@ def main() -> None:
     models = {
         "knn": KNeighborsClassifier(n_neighbors=3),
         "random_forest": RandomForestClassifier(n_estimators=150, random_state=42),
-        "logistic_regression": LogisticRegression(max_iter=500, multi_class="auto"),
+        "logistic_regression": LogisticRegression(max_iter=500),
         "svm": SVC(kernel="rbf", C=10, gamma="scale"),
     }
 

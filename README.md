@@ -1,59 +1,90 @@
-# Handwritten Digit Recognition
+# Handwritten Digit Recognition Using Deep Learning
 
-This project builds and compares several machine learning models for handwritten digit classification on the MNIST-style dataset stored in `data/train.csv` and `data/test.csv`.
+This project compares machine-learning and deep-learning models that classify handwritten digits from 28 x 28 grayscale images. It includes a Streamlit app, a command-line prediction tool, model utilities, and Jupyter notebooks.
+
+## Dataset
+
+The `train.csv` and `test.csv` files are available as assets in the GitHub release **[Dataset Uploaded (v1.0)](https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/tag/v1.0)**. Download both files from the release and place them in the project's `data/` folder.
+
+You can download the files directly with PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force data
+Invoke-WebRequest -Uri "https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/download/v1.0/train.csv" -OutFile "data/train.csv"
+Invoke-WebRequest -Uri "https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/download/v1.0/test.csv" -OutFile "data/test.csv"
+```
+
+The training file contains a `label` column and 784 pixel features. The test file contains pixel features. For app or command-line prediction, provide a CSV with exactly one row of 784 pixel values; a multi-row dataset is not a single-digit prediction input.
+
+The dataset is based on [Handwritten Digit Recognition on Kaggle](https://www.kaggle.com/datasets/bhavikjikadara/handwritten-digit-recognition).
 
 ## Project structure
 
-- `data/` — training and test datasets
-- `models/` — trained model files
-- `notebooks/` — exploratory training notebooks
-- `results/` — model comparison charts and CSV metrics
-- `digit_recognition/` — reusable Python utilities for loading and predicting with the trained models
-- `app/` — Streamlit app for live prediction from uploaded images or CSV data
-
-## Features
-
-- Trains and evaluates several classifiers
-- Saves trained models in `models/`
-- Compares model accuracy and error rate
-- Exposes a Streamlit web app for image and CSV prediction
-- Shows a leaderboard of model performance from `results/model_comparison.csv`
-- Includes a lightweight command-line prediction workflow
+- `app/` — Streamlit interface for image and CSV predictions
+- `data/` — locally downloaded training and test datasets
+- `digit_recognition/` — model loading, image preprocessing, and prediction utilities
+- `models/` — locally generated or supplied model artifacts
+- `notebooks/` — data preparation, model training, and comparison notebooks
+- `results/` — model comparison metrics and charts
+- `scripts/train_models.py` — trains the classical scikit-learn models
+- `tests/` — focused tests for prediction and input handling
 
 ## Setup
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv .venv
-   . .venv/bin/activate  # Linux/macOS
-   # or .venv\Scripts\activate  # Windows
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Use Python 3.10 or newer. From the project folder:
 
-## Run the app
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-```bash
+## Train models
+
+After downloading `train.csv`, train the classical models with:
+
+```powershell
+python scripts/train_models.py
+```
+
+This script trains KNN, Random Forest, Logistic Regression, and SVM models and saves their artifacts under `models/`. The notebooks contain the MLP and CNN training workflows.
+
+## Run the Streamlit app
+
+```powershell
 streamlit run app/app.py
 ```
 
-## Predict from a file using Python
+The app supports PNG and JPG/JPEG images, which it converts to grayscale and resizes to 28 x 28, or a single-row CSV containing 784 pixel values. Choose an available model in the sidebar, or use `auto` to select the first available model. The app also shows the model leaderboard and sample training rows when their files are available.
 
-```bash
-python -m digit_recognition.predict --image path/to/sample.png
+The app can start without local assets, but predictions are disabled until at least one trained model is present. Model artifacts are excluded from Git, so they must be generated locally or supplied separately.
+
+By default, the app looks for `data/`, `models/`, and `results/` under the project folder. To store them elsewhere, set `DIGIT_RECOGNITION_ASSETS_DIR` to a directory containing those folders:
+
+```powershell
+$env:DIGIT_RECOGNITION_ASSETS_DIR = "C:\path\to\digit-recognition-assets"
+streamlit run app/app.py
 ```
 
-You can also pass a CSV file containing 784 pixel values:
+## Make a prediction from the command line
 
-```bash
-python -m digit_recognition.predict --csv path/to/sample.csv
+For an image:
+
+```powershell
+python -m digit_recognition.predict --image path\to\digit.png --model logistic_regression
 ```
 
-## Model files
+For a single-row CSV:
 
-Available model artifacts include:
+```powershell
+python -m digit_recognition.predict --csv path\to\digit.csv --model logistic_regression
+```
+
+The `--model` option is optional. Supported names are `cnn`, `mlp`, `svm`, `knn`, `random_forest`, and `logistic_regression`.
+
+## Model and results files
+
+Supported model filenames:
 
 - `models/cnn_digit_model.keras`
 - `models/mlp_digit_model.pkl`
@@ -62,6 +93,10 @@ Available model artifacts include:
 - `models/random_forest_digit_model.pkl`
 - `models/logistic_regression_digit_model.pkl`
 
-## Notes
+`results/model_comparison.csv` supplies the leaderboard shown in the app. Dataset and model files are not committed to the repository; the datasets are distributed through the GitHub release linked above.
 
-The notebooks in `notebooks/` are the original training pipeline. This project now adds a clean Python entry point and a lightweight application interface so the models can be reused outside notebook execution.
+## Run tests
+
+```powershell
+python -m unittest discover -s tests -v
+```
