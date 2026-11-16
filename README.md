@@ -1,12 +1,20 @@
-# Handwritten Digit Recognition Using Deep Learning
+# Handwritten Digit Recognition
 
-This project compares machine-learning and deep-learning models that classify handwritten digits from 28 x 28 grayscale images. It includes a Streamlit app, a command-line prediction tool, model utilities, and Jupyter notebooks.
+A machine-learning project for classifying handwritten digits (0-9) from 28 x 28 grayscale images. It includes a Streamlit app, a command-line prediction tool, model-training notebooks, and a script for training classical machine-learning models.
+
+## Features
+
+- Predict a digit from a PNG/JPG image or a single-row CSV.
+- Choose an available model in the Streamlit app or let it select one automatically.
+- Train KNN, Random Forest, Logistic Regression, and SVM models with the training script.
+- Explore preprocessing, MLP, CNN, classical models, and model comparison in Jupyter notebooks.
+- Run focused tests for prediction and input validation.
 
 ## Dataset
 
-The `train.csv` and `test.csv` files are available as assets in the GitHub release **[Dataset Uploaded (v1.0)](https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/tag/v1.0)**. Download both files from the release and place them in the project's `data/` folder.
+Download `train.csv` and `test.csv` from the GitHub release: **[Dataset Uploaded (v1.0)](https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/tag/v1.0)**. Place both files in the project's `data/` directory. The training file has a `label` column and 784 pixel features; the test file contains pixel features.
 
-You can download the files directly with PowerShell:
+On Windows, run these commands from the project directory:
 
 ```powershell
 New-Item -ItemType Directory -Force data
@@ -14,89 +22,98 @@ Invoke-WebRequest -Uri "https://github.com/AmruthaVarshini06/Handwritten_Digit_R
 Invoke-WebRequest -Uri "https://github.com/AmruthaVarshini06/Handwritten_Digit_Recognition_Using_DL/releases/download/v1.0/test.csv" -OutFile "data/test.csv"
 ```
 
-The training file contains a `label` column and 784 pixel features. The test file contains pixel features. For app or command-line prediction, provide a CSV with exactly one row of 784 pixel values; a multi-row dataset is not a single-digit prediction input.
-
 The dataset is based on [Handwritten Digit Recognition on Kaggle](https://www.kaggle.com/datasets/bhavikjikadara/handwritten-digit-recognition).
 
-## Project structure
+## Requirements and installation
 
-- `app/` — Streamlit interface for image and CSV predictions
-- `data/` — locally downloaded training and test datasets
-- `digit_recognition/` — model loading, image preprocessing, and prediction utilities
-- `models/` — locally generated or supplied model artifacts
-- `notebooks/` — data preparation, model training, and comparison notebooks
-- `results/` — model comparison metrics and charts
-- `scripts/train_models.py` — trains the classical scikit-learn models
-- `tests/` — focused tests for prediction and input handling
+- Python 3.10 or newer
+- Packages listed in `requirements.txt`
 
-## Setup
-
-Use Python 3.10 or newer. From the project folder:
+Create and activate a virtual environment, then install the project dependencies:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+To run the notebooks, open them in VS Code with the Jupyter extension, or install Jupyter separately:
+
+```powershell
+python -m pip install notebook
+jupyter notebook
 ```
 
 ## Train models
 
-After downloading `train.csv`, train the classical models with:
+Download `train.csv` first. The training script fits KNN, Random Forest, Logistic Regression, and SVM models, prints holdout accuracy, and saves the model files under `models/`:
 
 ```powershell
 python scripts/train_models.py
 ```
 
-This script trains KNN, Random Forest, Logistic Regression, and SVM models and saves their artifacts under `models/`. The notebooks contain the MLP and CNN training workflows.
+The `notebooks/` directory contains the preprocessing, MLP, CNN, individual classical-model, and model-comparison workflows. Run the desired notebook cells from top to bottom. Notebook-generated model files may need to be copied into `models/` using the filenames in the table below before the app or CLI can load them.
+
+| Model | Expected file |
+| --- | --- |
+| CNN | `models/cnn_digit_model.keras` |
+| MLP | `models/mlp_digit_model.pkl` |
+| SVM | `models/svm_digit_model.pkl` |
+| KNN | `models/knn_digit_model.pkl` |
+| Random Forest | `models/random_forest_digit_model.pkl` |
+| Logistic Regression | `models/logistic_regression_digit_model.pkl` |
+
+Model artifacts are ignored by Git and must be generated or supplied locally.
 
 ## Run the Streamlit app
+
+From the project directory:
 
 ```powershell
 streamlit run app/app.py
 ```
 
-The app supports PNG and JPG/JPEG images, which it converts to grayscale and resizes to 28 x 28, or a single-row CSV containing 784 pixel values. Choose an available model in the sidebar, or use `auto` to select the first available model. The app also shows the model leaderboard and sample training rows when their files are available.
+Predictions are enabled when at least one supported model file is available. The app accepts PNG/JPG/JPEG images (converted to grayscale and resized to 28 x 28) or a CSV containing exactly one digit row with 784 pixel values. A multi-row dataset such as `test.csv` is not a single-digit prediction input.
 
-The app can start without local assets, but predictions are disabled until at least one trained model is present. Model artifacts are excluded from Git, so they must be generated locally or supplied separately.
+The app also displays sample training rows when `data/train.csv` is available. The optional leaderboard is loaded from `results/model_comparison.csv`; it must contain `Algorithm` and `Accuracy` columns.
 
-By default, the app looks for `data/`, `models/`, and `results/` under the project folder. To store them elsewhere, set `DIGIT_RECOGNITION_ASSETS_DIR` to a directory containing those folders:
+By default, the app looks for `data/`, `models/`, and `results/` in the project directory. To use a different asset directory, set `DIGIT_RECOGNITION_ASSETS_DIR` to a directory containing those three folders:
 
 ```powershell
 $env:DIGIT_RECOGNITION_ASSETS_DIR = "C:\path\to\digit-recognition-assets"
 streamlit run app/app.py
 ```
 
+The training script uses the project's `data/train.csv` and writes models to the project's `models/` directory; the environment variable above changes the app's asset location.
+
 ## Make a prediction from the command line
 
-For an image:
+Run these commands from the project directory:
 
 ```powershell
 python -m digit_recognition.predict --image path\to\digit.png --model logistic_regression
-```
-
-For a single-row CSV:
-
-```powershell
 python -m digit_recognition.predict --csv path\to\digit.csv --model logistic_regression
 ```
 
-The `--model` option is optional. Supported names are `cnn`, `mlp`, `svm`, `knn`, `random_forest`, and `logistic_regression`.
-
-## Model and results files
-
-Supported model filenames:
-
-- `models/cnn_digit_model.keras`
-- `models/mlp_digit_model.pkl`
-- `models/svm_digit_model.pkl`
-- `models/knn_digit_model.pkl`
-- `models/random_forest_digit_model.pkl`
-- `models/logistic_regression_digit_model.pkl`
-
-`results/model_comparison.csv` supplies the leaderboard shown in the app. Dataset and model files are not committed to the repository; the datasets are distributed through the GitHub release linked above.
+Use either `--image` or `--csv`. The `--model` option is optional; supported model names are `cnn`, `mlp`, `svm`, `knn`, `random_forest`, and `logistic_regression`. Without a model name, the first available model is selected.
 
 ## Run tests
 
 ```powershell
 python -m unittest discover -s tests -v
+```
+
+## Project structure
+
+```text
+app/                    Streamlit application
+data/                   Downloaded training and test datasets
+digit_recognition/      Model loading, preprocessing, and prediction code
+models/                 Locally generated or supplied model artifacts
+notebooks/              Preprocessing, training, and comparison notebooks
+results/                Optional model-comparison metrics and charts
+scripts/train_models.py Classical model training script
+tests/                  Unit tests
+requirements.txt        Python package dependencies
 ```
