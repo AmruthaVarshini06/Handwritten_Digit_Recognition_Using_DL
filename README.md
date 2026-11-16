@@ -78,7 +78,7 @@ Model artifacts are ignored by Git and must be generated or supplied locally. Th
 python scripts/train_rejection.py
 ```
 
-On other platforms, fonts are discovered under `/usr/share/fonts` or `/System/Library/Fonts`. You can provide a directory with at least four TTF fonts using `--font-dir path/to/fonts` on either training script. No fonts or external datasets are downloaded. Keep `models/digit_verifier.pkl` alongside the recognizer artifacts; predictions remain disabled until it exists.
+On other platforms, fonts are discovered under `/usr/share/fonts` or `/System/Library/Fonts`. You can provide a directory with at least four TTF fonts using `--font-dir path/to/fonts` on either training script. No fonts or external datasets are downloaded. Keep `models/digit_verifier.pkl` alongside the recognizer artifacts; predictions remain disabled until it exists. After retraining the verifier, run `python -m digit_recognition.evaluation` to refresh acceptance metrics for the installed recognizers.
 
 The training script also replaces `results/model_comparison.csv` with metrics for the models trained in that run. To compare all installed models, run `python -m digit_recognition.evaluation`, or run `notebooks/08_Model_Comparison.ipynb` to refresh the charts too, after copying the artifacts into `models/`. It evaluates actual predictions; all artifacts must have been trained with the repository's stratified 80/20 split and `random_state=42`, leaving the holdout rows out of training. Previous fixed leaderboard scores have been removed; regenerate the results before using the leaderboard or comparison charts.
 
@@ -105,7 +105,7 @@ $env:DIGIT_RECOGNITION_ASSETS_DIR = "C:\path\to\digit-recognition-assets"
 streamlit run app/app.py
 ```
 
-The training script uses the project's `data/train.csv` and writes models to the project's `models/` directory; the environment variable above changes the app's asset location.
+Training, evaluation, the CLI, and the app all use this asset directory when the environment variable is set. Without it, they use the project's data, models, and results folders.
 
 ## Make a prediction from the command line
 
@@ -146,7 +146,9 @@ The verified comparison of the six installed artifacts puts CNN at **98.31% hold
 
 Use one digit per image. Blank and nearly blank inputs are rejected. A separate Extra Trees classifier screens digit versus non-digit shapes before any of the six recognizers runs. It trains on real training digits, printed digit positives, and generated letter, symbol, and multiple-digit negatives. The old fixed 80% recognizer-confidence rule and the SVM dependency on Logistic Regression have been removed. SVM uses the same verifier as every other model.
 
-The verifier's threshold is chosen from a calibration subset of the digit training data and printed validation digits, targeting at least 99% acceptance of calibration handwriting and 95% of validation printed digits. These are calibration targets, not test guarantees. The final 20% digit holdout is excluded from verifier fitting and threshold selection. Generated text uses disjoint training, validation, and test font files. The measured results, font split, threshold, and dataset fingerprint are saved in `results/rejection_validation.json`.
+The verifier's threshold is chosen from a calibration subset of the digit training data, targeting at least 99% acceptance of calibration handwriting. Printed validation digits are audited separately and do not set the handwriting threshold. This is a calibration target, not a test guarantee. The final 20% digit holdout is excluded from verifier fitting and threshold selection. Generated text uses disjoint training, validation, and test font files. The measured results, font split, threshold, and dataset fingerprint are saved in `results/rejection_validation.json`.
+
+The final verifier run accepted **99.14% of 8,400 held-out handwritten digits** and rejected **99.82% of 552 held-out generated non-digit examples**. On 80 printed digit examples from the held-out font, it accepted only **50%**: typed numerals are a weak area, and the handwriting-calibrated threshold does not promise good acceptance of arbitrary typefaces.
 
 Synthetic text is not a representative dataset of handwritten letters, photographs, or every possible symbol. Characters such as O/0 and I/1 can be visually indistinguishable. The verifier improves rejection without guaranteeing that every non-number is detected. Its test report records the remaining false acceptances and rejections. For production use, add representative labeled non-digit handwriting and external validation.
 

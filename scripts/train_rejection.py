@@ -34,7 +34,7 @@ def font_samples(fonts, seed):
             for _ in range(8):
                 font = ImageFont.truetype(str(font_path), int(random.integers(40, 65)))
                 image = Image.new("L", (220, 110), 0)
-                ImageDraw.Draw(image).text((12, 8), text, font=font,
+                ImageDraw.Draw(image).text((110, 55), text, font=font, anchor="mm",
                                           fill=int(random.integers(180, 256)), stroke_width=int(random.integers(0, 2)))
                 image = image.rotate(float(random.uniform(-14, 14)), resample=Image.Resampling.BICUBIC)
                 pixels = np.asarray(_fit_digit_image(image), dtype=np.float32).reshape(784) / 255
@@ -52,6 +52,8 @@ def train(font_dir: Path):
         fonts = sorted(font_dir.rglob("*.ttf"))
     if len(fonts) < 4:
         raise ValueError("Provide a font directory containing at least four TTF fonts.")
+    if len(fonts) > 8:
+        fonts = [fonts[index] for index in np.linspace(0, len(fonts) - 1, 8, dtype=int)]
     training_fonts, validation_fonts, test_fonts = fonts[:-2], fonts[-2:-1], fonts[-1:]
     print("Generating text examples with disjoint training/validation/test fonts...", flush=True)
     printed_train, negative_train = font_samples(training_fonts, 42)
@@ -71,11 +73,7 @@ def train(font_dir: Path):
     print(f"Training verifier on {len(positive_fit):,} digits and {len(negative_train):,} text negatives...", flush=True)
     model.fit(verifier_features(train_images), targets)
     calibration_scores = model.predict_proba(verifier_features(X_calibration.to_numpy()))[:, 1]
-    printed_calibration_scores = model.predict_proba(verifier_features(printed_validation))[:, 1]
-    threshold = min(
-        calibrated_threshold(calibration_scores, 0.99),
-        calibrated_threshold(printed_calibration_scores, 0.95),
-    )
+    threshold = calibrated_threshold(calibration_scores, 0.99)
 
     def acceptance(images):
         probabilities = model.predict_proba(verifier_features(images))[:, 1]
@@ -83,7 +81,6 @@ def train(font_dir: Path):
 
     report = {
         "threshold": threshold, "target_calibration_digit_acceptance_percent": 99,
-        "target_validation_printed_digit_acceptance_percent": 95,
         "calibration_digit_acceptance_percent": acceptance(X_calibration.to_numpy()),
         "test_digit_acceptance_percent": acceptance(X_test.to_numpy()),
         "validation_non_digit_rejection_percent": 100 - acceptance(negative_validation),

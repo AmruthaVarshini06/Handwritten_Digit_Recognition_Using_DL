@@ -1,10 +1,31 @@
 import unittest
 from unittest.mock import patch
+from pathlib import Path
 
 import numpy as np
 
 from digit_recognition import model_utils as utils
 from digit_recognition.rejection import calibrated_threshold, digit_acceptance_mask, verifier_features
+
+
+@unittest.skipUnless(
+    (utils.MODELS_DIR / "digit_verifier.pkl").is_file() and Path("C:/Windows/Fonts/arial.ttf").is_file(),
+    "Integration check requires a trained verifier and the Arial font.",
+)
+class RejectionIntegrationTests(unittest.TestCase):
+    def test_previously_accepted_letters_symbols_and_multiple_digits_are_rejected(self):
+        import tempfile
+        from PIL import Image, ImageDraw, ImageFont
+        font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 64)
+        with tempfile.TemporaryDirectory() as directory:
+            for text in ("A", "B", "H", "M", "+", "12", "345"):
+                with self.subTest(text=text):
+                    image = Image.new("RGB", (180, 100), "white")
+                    ImageDraw.Draw(image).text((15, 5), text, font=font, fill="black")
+                    path = Path(directory) / "input.png"
+                    image.save(path)
+                    pixels = utils._load_image_file(path)
+                    self.assertFalse(bool(digit_acceptance_mask(pixels.reshape(1, -1))[0]))
 
 
 class RejectionTests(unittest.TestCase):

@@ -149,10 +149,10 @@ if upload is not None:
     except (AttributeError, EOFError, FileNotFoundError, ImportError, KeyError, OSError, ValueError) as exc:
         st.error(f"Prediction failed: {exc}")
 else:
-    if model_names:
+    if model_names and verifier_ready:
         st.info("Upload a digit image or a CSV row to begin, or review the sample training rows below.")
     else:
-        st.info("Upload is disabled until a trained model is available.")
+        st.info("Upload is disabled until a trained recognizer and digit verifier are available.")
 
     sample_rows = load_training_sample()
     if sample_rows is None:
