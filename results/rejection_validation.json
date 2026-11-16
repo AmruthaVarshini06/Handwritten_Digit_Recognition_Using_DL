@@ -1,0 +1,29 @@
+{
+  "threshold": 0.30241830587060814,
+  "target_calibration_digit_acceptance_percent": 99,
+  "target_validation_printed_digit_acceptance_percent": 95,
+  "calibration_digit_acceptance_percent": 100.0,
+  "test_digit_acceptance_percent": 100.0,
+  "validation_non_digit_rejection_percent": 76.44927536231884,
+  "validation_printed_digit_acceptance_percent": 95.0,
+  "test_non_digit_rejection_percent": 85.68840579710145,
+  "test_printed_digit_acceptance_percent": 100.0,
+  "train_fonts": [
+    "calibri.ttf",
+    "comic.ttf",
+    "segoeui.ttf",
+    "tahoma.ttf",
+    "times.ttf",
+    "verdana.ttf"
+  ],
+  "validation_fonts": [
+    "consola.ttf"
+  ],
+  "test_fonts": [
+    "arial.ttf"
+  ],
+  "test_digit_count": 8400,
+  "test_non_digit_count": 552,
+  "dataset_sha256": "b35cc952c291f03d995f48721373e69454f689e299d724bd9a5927bdabddfeed",
+  "limitation": "Text negatives are synthetic fonts, not representative handwritten letters, photos, or all symbols."
+}
